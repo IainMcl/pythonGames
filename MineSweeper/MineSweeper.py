@@ -37,39 +37,29 @@ class Grid:
             # bomb hit
             # self.selection_grid[i][j] = -2
             self.bomb_hit(i, j)
-            return 0
+            return 1
         elif self.grid[i][j] == 0:
             # No bombs
-            zeros = True
+            zeros = True # unused
             x = i
             y = j
             self.selection_grid[i][j] = 0
-            # while zeros:
-            #     self.reveal_empty_neighbours(i, j)
+            self.reveal_empty_neighbours(i, j)
         else:
             self.selection_grid[i][j] = self.grid[i][j]
+        return 0
 
     def reveal_empty_neighbours(self, i, j):
-        start_x = i-1
-        end_x = i + 1
-        start_y = j - 1
-        end_y = j + 1
-        if i == 0:
-            start_x = i
-        if i == self.N - 1:
-            end_x = i
-        if j == 0:
-            start_x = j
-        if j == self.N - 1:
-            end_x = j
-
-        for x in range(start_x, end_x):
-            for y in range(start_y, end_y):
-                if x == i and y == j:
+        for x in range(i -1, i + 2):
+            for y in range(j - 1, j + 2):
+                if x < 0 or x >= self.N or y < 0 or y >= self.N or (x == i and y == j):
                     continue
-                if self.grid[x][y] == 0: #  and self.selection_grid[x][y] != self.grid[x][y]:  # May need this
+                if self.grid[x][y] == 0 and self.selection_grid[x][y] != 0:
                     self.selection_grid[x][y] = self.grid[x][y]
                     self.reveal_empty_neighbours(x, y)
+                else:
+                    self.selection_grid[x][y] = self.grid[x][y]
+                
 
     def flag_added(self, i, j):
         # print("Flag added: %d, %d" % (i, j))
@@ -90,6 +80,12 @@ class Grid:
                     self.selection_grid[i][j] = -1
         # self._show_grid()
 
+    def reset(self):
+        for i in range(self.N):
+            for j in range(self.N):
+                if self.grid[i][j] == -1:
+                    self.selection_grid[i][j] = 10
+
     def select_point(self):
         """ Not used """
         a = input("Enter the grid location:").split(" ")
@@ -104,7 +100,11 @@ class Game:
         self.win = pygame.display.set_mode((self.width, self.width))
         pygame.display.set_caption("MineSweeper")
         self.run_game() ## Needs removed once a ome page has been made
-        self.flag = pygame.image.load('red_flag.png') # Still haveing issues
+        self.flag = pygame.image.load("red_flag.png") # Still haveing issues
+        if self.flag:
+            print("HERE")
+        else:
+            print("THERE")
         # self.win.blit(self.flag, (0,0))
 
     def get_grid_pos(self, mx, my):
@@ -130,18 +130,22 @@ class Game:
             if click1:
                 mx, my = pygame.mouse.get_pos()
                 grid_x, grid_y = self.get_grid_pos(mx, my)
-                self.grid.cell_clicked(grid_x, grid_y)
+                if(self.grid.cell_clicked(grid_x, grid_y)):
+                    self.end_game()
             if click3:
                 mx, my = pygame.mouse.get_pos()
                 grid_x, grid_y = self.get_grid_pos(mx, my)
                 self.grid.flag_added(grid_x, grid_y)
+            if keys[pygame.K_r]:
+                self.grid.reset()
+
             self.draw_grid()
             pygame.display.update()
 
 
     def draw_grid(self):
         n_boxes = self.grid.N
-        buffer = 5
+        buffer = 3
         box_width = (self.width-buffer/2) // n_boxes
         font = pygame.font.Font('freesansbold.ttf', 30)
         for i in range(n_boxes):
@@ -181,13 +185,16 @@ class Game:
                 elif self.grid.selection_grid[i][j] == -1:
                     box_col = (200, 0, 0)
                 
-                pygame.draw.rect(self.win, box_col, ((i * box_width) + buffer, (j * box_width) + buffer, box_width - buffer, box_width - buffer))
+                pygame.draw.rect(self.win, box_col, ((i * box_width) + buffer, (j * box_width) + buffer, box_width-buffer, box_width-buffer))
                 text = font.render("%s" % val, True, col)
                 textRect = text.get_rect()
                 textRect.center = ((i * box_width) + buffer + box_width // 2, (j * box_width) + buffer + box_width // 2)
                 
                 self.win.blit(text, textRect)
                 # self.win.blit(self.flag, (0,0))
+    
+    def end_game(self):
+        print("GAME OVER")
 
 
 
