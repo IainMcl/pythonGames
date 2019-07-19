@@ -97,6 +97,7 @@ class Grid:
         for i in range(self.N):
             for j in range(self.N):
                 if self.grid[i][j] == -1 and self.selection_grid[i][j] != 9:
+                    # return 1 ## For debugging ---------------------------------------------------------------------------------------------------
                     return 0
         return 1
 
@@ -114,6 +115,7 @@ class Game:
         self.win = pygame.display.set_mode((self.width, self.width))
         pygame.display.set_caption("MineSweeper")
         self.flag = pygame.image.load("red_flag.png") # Still haveing issues
+        self.complete()
         self.run_game() ## Needs removed once a ome page has been made
         # self.win.blit(self.flag, (0,0))
 
@@ -130,7 +132,7 @@ class Game:
     def run_game(self):
         running = True
         while running:
-            pygame.time.delay(150)
+            pygame.time.delay(50)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -225,7 +227,6 @@ class Game:
 
         pygame.time.delay(1500)
         waiting = True
-        level = "medium"
         while waiting:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -235,13 +236,89 @@ class Game:
                 if keys[pygame.K_SPACE]:
                     waiting = False
                     self.win.fill(0)
-                    self.grid.full_reset()
+                    # self.grid.full_reset()
+                    self.complete()
                     return 1
         return 0
 
     def complete(self):
-        print("Fin!")
+        self.draw_grid()
+        pygame.time.delay(1500)
+        self.win.fill((50, 115,220, 0.3))
+        waiting = True
 
+        positions = [] ## fill with button positions
+        pygame.draw.rect(self.win, (170, 255, 195), (0.05 * self.width, 0.75 * self.width, 0.26 * self.width, 0.1 * self.width))
+        pygame.draw.rect(self.win, (255, 225, 25), (0.36 * self.width, 0.75 * self.width, 0.26 * self.width, 0.1 * self.width))
+        pygame.draw.rect(self.win, (230, 25, 75), (0.67 * self.width, 0.75 * self.width, 0.26 * self.width, 0.1 * self.width))
+        positions.append(ButtonPosition(0.05 * self.width, 0.75 * self.width, 0.26 * self.width, 0.1 * self.width))
+        positions.append(ButtonPosition(0.36 * self.width, 0.75 * self.width, 0.26 * self.width, 0.1 * self.width))
+        positions.append(ButtonPosition(0.67 * self.width, 0.75 * self.width, 0.26 * self.width, 0.1 * self.width))
+
+        font = pygame.font.Font('freesansbold.ttf', 64) 
+        main_text = font.render("MineSweeper", True, (0, 0, 0))
+
+        font = pygame.font.Font('freesansbold.ttf', 32) 
+        easy_text = font.render("Easy", True, (0, 0, 0))
+        medium_text = font.render("Medium", True, (0, 0, 0))
+        hard_text = font.render("Hard", True, (0, 0, 0))
+
+        main_textRect = main_text.get_rect()  
+        easy_textRect = easy_text.get_rect()  
+        medium_textRect = medium_text.get_rect()
+        hard_textRect = hard_text.get_rect()
+
+        main_textRect.center = (self.width * 0.5, self.width * 0.3) 
+        easy_textRect.center = (self.width * 0.18, self.width * 0.8) 
+        medium_textRect.center = (self.width * 0.49, self.width * 0.8)
+        hard_textRect.center = (self.width * 0.80, self.width * 0.8)
+
+        self.win.blit(main_text, main_textRect)
+        self.win.blit(easy_text, easy_textRect)
+        self.win.blit(medium_text, medium_textRect)
+        self.win.blit(hard_text, hard_textRect)
+
+        while waiting:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+            keys = pygame.key.get_pressed()
+            click1, click2, click3 = pygame.mouse.get_pressed()
+            if click1:
+                mx, my = pygame.mouse.get_pos()
+                if self.button_pressed(positions, mx, my) == 1:
+                    self.grid.full_reset(9, 10)
+                    self.win.fill(0)
+                    pygame.time.delay(1500)
+                    return 1
+                elif self.button_pressed(positions, mx, my) == 2:
+                    self.grid.full_reset(15, 40)
+                    self.win.fill(0)
+                    pygame.time.delay(1500)
+                    return 1
+                elif self.button_pressed(positions, mx, my) == 3:
+                    self.grid.full_reset(20, 100)
+                    self.win.fill(0)
+                    pygame.time.delay(1500)
+                    return 1
+            pygame.display.update()
+        return 0
+
+
+    def button_pressed(self, positions, mx, my):
+        for i, button in enumerate(positions):
+            if mx > button.x and mx < button.w + button.x:
+                if my > button.y and my < button.y + button.h:
+                    return i + 1
+        return 0
+
+class ButtonPosition:
+    def __init__(self, x, y, width, height):
+        self.x = x
+        self.y = y
+        self.w = width
+        self.h = height
 
 
 def main(argv):
