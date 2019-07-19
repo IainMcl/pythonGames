@@ -93,6 +93,13 @@ class Grid:
                 if self.grid[i][j] == -1:
                     self.selection_grid[i][j] = 10
 
+    def check_complete(self):
+        for i in range(self.N):
+            for j in range(self.N):
+                if self.grid[i][j] == -1 and self.selection_grid[i][j] != 9:
+                    return 0
+        return 1
+
     def select_point(self):
         """ Not used """
         a = input("Enter the grid location:").split(" ")
@@ -142,9 +149,10 @@ class Game:
                 self.grid.flag_added(grid_x, grid_y)
             if keys[pygame.K_r]:
                 self.grid.reset()
-
             self.draw_grid()
             pygame.display.update()
+            if self.grid.check_complete():
+                self.complete()
 
 
     def draw_grid(self):
@@ -220,7 +228,7 @@ class Game:
         level = "medium"
         while waiting:
             for event in pygame.event.get():
-                if event == pygame.QUIT:
+                if event.type == pygame.QUIT:
                     pygame.quit()
                     exit()
                 keys = pygame.key.get_pressed()
@@ -231,10 +239,13 @@ class Game:
                     return 1
         return 0
 
+    def complete(self):
+        print("Fin!")
+
 
 
 def main(argv):
-    argv = [15, 20]
+    argv = [15, 68]
     if len(argv) != 2:
         print("python MineSweeper.py N n_mines")
         sys.exit()
