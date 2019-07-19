@@ -13,7 +13,14 @@ class Grid:
         self.grid = np.random.choice([0, -1], size=(N, N), p=ps)
         self.init_grid()
         self.selection_grid = np.ones((N, N)) * 10
-        # self.selection_grid = self.grid
+
+    def full_reset(self, N=15, n_mines=20):
+        self.N = N
+        self.n_mines = n_mines
+        ps = [1-(n_mines/N**2), n_mines/N**2]
+        self.grid = np.random.choice([0, -1], size=(N, N), p=ps)
+        self.init_grid()
+        self.selection_grid = np.ones((N, N)) * 10
 
     def init_grid(self):
         nn = np.array([[-1, -1, -1],
@@ -96,15 +103,11 @@ class Game:
     def __init__(self, grid):
         self.grid = grid
         pygame.init()
-        self.width = 600
+        self.width = 900
         self.win = pygame.display.set_mode((self.width, self.width))
         pygame.display.set_caption("MineSweeper")
-        self.run_game() ## Needs removed once a ome page has been made
         self.flag = pygame.image.load("red_flag.png") # Still haveing issues
-        if self.flag:
-            print("HERE")
-        else:
-            print("THERE")
+        self.run_game() ## Needs removed once a ome page has been made
         # self.win.blit(self.flag, (0,0))
 
     def get_grid_pos(self, mx, my):
@@ -131,7 +134,8 @@ class Game:
                 mx, my = pygame.mouse.get_pos()
                 grid_x, grid_y = self.get_grid_pos(mx, my)
                 if(self.grid.cell_clicked(grid_x, grid_y)):
-                    self.end_game()
+                    if not self.end_game():
+                        running = False
             if click3:
                 mx, my = pygame.mouse.get_pos()
                 grid_x, grid_y = self.get_grid_pos(mx, my)
@@ -163,7 +167,7 @@ class Game:
                 if self.grid.selection_grid[i][j] == 10: # or self.grid.selection_grid[i][j] == 9:
                     box_col = (200, 200, 200)
                 elif self.grid.selection_grid[i][j] == 0:
-                    box_col = (0, 150, 0)
+                    box_col = (113, 196, 71)
                 elif self.grid.selection_grid[i][j] == 1:
                     col = (20, 150, 0)
                 elif self.grid.selection_grid[i][j] == 2:
@@ -185,7 +189,7 @@ class Game:
                 elif self.grid.selection_grid[i][j] == -1:
                     box_col = (200, 0, 0)
                 
-                pygame.draw.rect(self.win, box_col, ((i * box_width) + buffer, (j * box_width) + buffer, box_width-buffer, box_width-buffer))
+                pygame.draw.rect(self.win, box_col, ((i * box_width) + buffer, (j * box_width) + buffer, box_width - buffer, box_width - buffer))
                 text = font.render("%s" % val, True, col)
                 textRect = text.get_rect()
                 textRect.center = ((i * box_width) + buffer + box_width // 2, (j * box_width) + buffer + box_width // 2)
@@ -194,12 +198,43 @@ class Game:
                 # self.win.blit(self.flag, (0,0))
     
     def end_game(self):
+        self.draw_grid()
+        pygame.display.update()
         print("GAME OVER")
+        pygame.time.delay(2000)
+
+        font = pygame.font.Font('freesansbold.ttf', 32) 
+        go_text = font.render("GAME OVER!", True, (0, 0, 0))
+        cont_text = font.render("Press space bar to continue.", True, (0, 0, 0))
+        go_textRect = go_text.get_rect()  
+        cont_textRect = cont_text.get_rect()
+        go_textRect.center = (self.width // 2, self.width // 2) 
+        cont_textRect.center = (self.width // 2, 6.5 * self.width// 8)
+        self.win.blit(go_text, go_textRect)
+        self.win.blit(cont_text, cont_textRect)
+
+        pygame.display.update()
+
+        pygame.time.delay(1500)
+        waiting = True
+        level = "medium"
+        while waiting:
+            for event in pygame.event.get():
+                if event == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_SPACE]:
+                    waiting = False
+                    self.win.fill(0)
+                    self.grid.full_reset()
+                    return 1
+        return 0
 
 
 
 def main(argv):
-    argv = [10, 20]
+    argv = [15, 20]
     if len(argv) != 2:
         print("python MineSweeper.py N n_mines")
         sys.exit()
