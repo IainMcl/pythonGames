@@ -28,14 +28,15 @@ class Game:
             keys = pygame.key.get_pressed()
             if keys[pygame.K_RIGHT]:
                 player.direction = 1
-                player.vx = 1
+                player.vx = 2
             if keys[pygame.K_LEFT]:
                 player.direction = -1
-                player.vx = -1
+                player.vx = -2
             if keys[pygame.K_UP]:
-                player.vy = -2
+                if player.onGround:
+                    player.vy = -10
             if keys[pygame.K_DOWN]:
-                player.vy = 2
+                player.vy = 5
                 if player.onGround:
                     player.direction = 0
                     player.vx = 0
@@ -79,7 +80,7 @@ class MovingObject(object):
             self.y = gameSize[1] - self.sizey
             self.onGround = True
         if not self.onGround:
-            self.vy = 1
+            self.vy += 1
         self.x += self.vx
         self.y += self.vy
 
