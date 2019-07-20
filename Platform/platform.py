@@ -72,15 +72,23 @@ class MovingObject(object):
             loaded.append(pygame.image.load(image))
         return loaded
 
-    def move(self):
+    def move(self, groundBuffer=10):
         gameSize = pygame.display.get_surface().get_size()
-        if self.y < gameSize[1] - self.sizey:
+        if self.y < gameSize[1] - self.sizey - groundBuffer:
             self.onGround = False
-        if self.y >= gameSize[1] - self.sizey:
-            self.y = gameSize[1] - self.sizey
+        if self.y >= gameSize[1] - self.sizey - groundBuffer:
+            self.y = gameSize[1] - self.sizey - groundBuffer
             self.onGround = True
         if not self.onGround:
             self.vy += 1
+        if self.x >= gameSize[0] - self.sizex:
+            self.vx = 0
+            self.x -= 1
+            self.direction = 0  ## Maybe get rid of
+        if self.x <= 0:
+            self.vx = 0
+            self.x += 1
+            self.direction = 0 ## maybe get rid of
         self.x += self.vx
         self.y += self.vy
 
