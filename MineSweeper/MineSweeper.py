@@ -97,7 +97,6 @@ class Grid:
         for i in range(self.N):
             for j in range(self.N):
                 if self.grid[i][j] == -1 and self.selection_grid[i][j] != 9:
-                    # return 1 ## For debugging ---------------------------------------------------------------------------------------------------
                     return 0
         return 1
 
@@ -211,7 +210,7 @@ class Game:
         self.draw_grid()
         pygame.display.update()
         print("GAME OVER")
-        pygame.time.delay(2000)
+        pygame.time.delay(1000)
 
         font = pygame.font.Font('freesansbold.ttf', 32) 
         go_text = font.render("GAME OVER!", True, (0, 0, 0))
