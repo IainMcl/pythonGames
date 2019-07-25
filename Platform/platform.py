@@ -18,7 +18,9 @@ class Game:
         running = True
         objects = []
         player = Player(self.win, 168, 50)
+        enemy = Enemy(self.win, self.size[0] * 4// 6, 50)
         objects.append(player)
+        objects.append(enemy)
         while running:
             self.clock.tick(27)
             for event in pygame.event.get():
@@ -40,10 +42,14 @@ class Game:
                 if player.onGround:
                     player.direction = 0
                     player.vx = 0
+            # for i, obj in enumerate(objects):  # Remove players and objects when they are of the screen
+            #     if not obj.onScreen():
+            #         objects.pop(i)
             self.draw(objects)
 
     def draw(self, objects):
         self.win.blit(self.background, (0,0))
+        print(len(objects))
         for obj in objects:
             obj.draw()
             obj.move()
@@ -60,6 +66,14 @@ class MovingObject(object):
         self.sizex = sizex
         self.sizey = sizey
         self.onGround = True
+
+    def onScreen(self):
+        gameSize = pygame.display.get_surface().get_size()
+        if self.x > gameSize[0] or self.x <  - self.sizex:
+            return False
+        if self.y > gameSize[1] + self.sizey or self.y < 0:
+            return False
+        return True
 
     def load_images(self, template_string, length):
         """
@@ -116,7 +130,7 @@ class Player(MovingObject):
             self.walkCount += 1
 
 class Enemy(MovingObject):
-    def __init__(self, win, x, y, vx, vy, direction):
+    def __init__(self, win, x, y, vx=-1, vy=0, direction=-1):
         self.win = win
         self.left_list = super().load_images("L%dE.png", 11)
         self.right_list = super().load_images("R%dE.png", 11)
@@ -124,6 +138,17 @@ class Enemy(MovingObject):
 
         super().__init__(x, y, vx, vy, direction, sizex, sizey)
         self.onGround = False
+        self.walkCount = 0
+
+    def draw(self):
+        if self.walkCount + 1 >= 30:
+            self.walkCount = 0
+        if self.direction == -1:
+            self.win.blit(self.left_list[self.walkCount//3], (self.x, self.y))
+            self.walkCount += 1
+        if self.direction == 1:
+            self.win.blit(self.right_list[self.walkCount//3], (self.x, self.y))
+            self.walkCount += 1
 
 
 class Bullet(MovingObject):
