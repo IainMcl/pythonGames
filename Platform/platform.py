@@ -42,14 +42,17 @@ class Game:
                 if player.onGround:
                     player.direction = 0
                     player.vx = 0
-            # for i, obj in enumerate(objects):  # Remove players and objects when they are of the screen
-            #     if not obj.onScreen():
-            #         objects.pop(i)
+            if keys[pygame.K_SPACE]:
+                objects.append(player.shoot())
+            for i, obj in enumerate(objects):  # Remove players and objects when they are of the screen
+                if not obj.onScreenCheck():
+                    objects.pop(i)
+
             self.draw(objects)
 
     def draw(self, objects):
         self.win.blit(self.background, (0,0))
-        print(len(objects))
+        # print("Length of objects: " + str(len(objects)))
         for obj in objects:
             obj.draw()
             obj.move()
@@ -57,7 +60,7 @@ class Game:
         
         
 class MovingObject(object):
-    def __init__(self, x, y, vx, vy, direction, sizex, sizey):
+    def __init__(self, x, y, vx, vy, direction, sizex, sizey, catagory=None):
         self.x = x
         self.y = y
         self.vx = vx
@@ -66,8 +69,12 @@ class MovingObject(object):
         self.sizex = sizex
         self.sizey = sizey
         self.onGround = True
+        self.onDisplay = True
+        self.catagory = catagory
 
-    def onScreen(self):
+    def onScreenCheck(self):
+        if not self.onDisplay:
+            return False
         gameSize = pygame.display.get_surface().get_size()
         if self.x > gameSize[0] or self.x <  - self.sizex:
             return False
@@ -87,6 +94,9 @@ class MovingObject(object):
         return loaded
 
     def move(self, groundBuffer=10):
+        # print("%s position: %d, %d" % (self.catagory, self.x, self.y))
+        if self.catagory == "Enemy" and self.x <= 1:
+            self.onDisplay = False
         gameSize = pygame.display.get_surface().get_size()
         if self.y < gameSize[1] - self.sizey - groundBuffer:
             self.onGround = False
@@ -112,10 +122,14 @@ class Player(MovingObject):
         self.left_list = super().load_images("L%d.png", 9)
         self.right_list = super().load_images("R%d.png", 9)
         sizex, sizey = self.left_list[0].get_rect().size
-        super().__init__(x, y, vx, vy, direction, sizex, sizey)
+        super().__init__(x, y, vx, vy, direction, sizex, sizey, "Player")
         self.standing = pygame.image.load("standing.png")
         self.walkCount = 0
         self.onGround = False
+
+    def shoot(self):
+        bullet = Bullet(self.win,  self.x, self.y, self.vx + 3, 0, self.direction)
+        return bullet
 
     def draw(self):
         if self.walkCount + 1 >= 27:
@@ -136,7 +150,7 @@ class Enemy(MovingObject):
         self.right_list = super().load_images("R%dE.png", 11)
         sizex, sizey = self.left_list[0].get_rect().size
 
-        super().__init__(x, y, vx, vy, direction, sizex, sizey)
+        super().__init__(x, y, vx, vy, direction, sizex, sizey, "Enemy")
         self.onGround = False
         self.walkCount = 0
 
@@ -154,7 +168,10 @@ class Enemy(MovingObject):
 class Bullet(MovingObject):
     def __init__(self, win, x, y, vx, vy, direction):
         self.win = win
-        super().__init__(x, y, vx, vy, direction)
+        super().__init__(x, y, vx, vy, direction, 1, 1, catagory="Bullet")
+
+    def draw(self):
+        pygame.draw.circle(self.win, (0, 0, 0), (int(self.x), int(self.y)), 10, 1)
 
 def main():
     game = Game()
