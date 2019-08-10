@@ -59,7 +59,8 @@ class NaughtsAndCrosses(object):
             if self.check_stalemate():
                 winner = "No one :("
                 playing = False
-      
+
+
             pygame.display.update()
             
         new_game = self.show_end_game_page(winner)
@@ -108,8 +109,10 @@ class NaughtsAndCrosses(object):
                 if self.board[i][j] == 1:
                     centre = (int(1/6 * gameSize[0] + j * gameSize[0] // 3), int(1/6 * gameSize[1] + i * gameSize[1] // 3))
                     # draw X
-                    pygame.draw.line(self.win, BLUE, (centre[0] - width * 6, centre[1] - width * 6), (centre[0] + width * 6, centre[1] + width * 6), int(width // 1.5))
-                    pygame.draw.line(self.win, BLUE, (centre[0] - width * 6, centre[1] + width * 6), (centre[0] + width * 6, centre[1] - width * 6), int(width // 1.5))
+                    pygame.draw.line(self.win, BLUE, centre, (centre[0] + width * 6, centre[1] + width * 6), int(width // 1.5))
+                    pygame.draw.line(self.win, BLUE, centre, (centre[0] - width * 6, centre[1] - width * 6), int(width // 1.5))
+                    pygame.draw.line(self.win, BLUE, centre, (centre[0] + width * 6, centre[1] - width * 6), int(width // 1.5))
+                    pygame.draw.line(self.win, BLUE, centre, (centre[0] - width * 6, centre[1] + width * 6), int(width // 1.5))
                 elif self.board[i][j] == -1:
                     # draw O
                     pygame.draw.circle(self.win, RED, (int(1/6 * gameSize[0] + j * gameSize[0] // 3), int(1/6 * gameSize[1] + i * gameSize[1] // 3)), width * 6, int(width // 1.5))
