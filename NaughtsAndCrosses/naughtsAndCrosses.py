@@ -14,7 +14,7 @@ class NaughtsAndCrosses(object):
         self.board = np.zeros((3, 3))
 
         self.player_vs_player = False
-        self.players_turn = True
+        self.players_turn = False
         self.naughts = True
 
         self.background = pygame.image.load("background.jpg")
@@ -49,7 +49,7 @@ class NaughtsAndCrosses(object):
                 if self.board[grid_y][grid_x] == 0:
                     self.player_move(grid_x, grid_y)
 
-            if self.check_win(grid_x, grid_y):
+            if self.check_win():
                 # Check if game winner
                 if self.naughts:
                     winner = "Crosses"
@@ -59,7 +59,6 @@ class NaughtsAndCrosses(object):
             if self.check_stalemate():
                 winner = "No one :("
                 playing = False
-
 
             pygame.display.update()
             
@@ -133,7 +132,11 @@ class NaughtsAndCrosses(object):
 
     def computer_move(self):
         obj = AI()
-        vals = obj.move(self.board, level=1)
+        if self.naughts:
+            turn = -1
+        else:
+            turn = 1
+        vals = obj.move(self.board, turn, level=2)
         if self.naughts:
             self.board[vals[0]][vals[1]] = -1
             self.naughts = False
@@ -143,18 +146,20 @@ class NaughtsAndCrosses(object):
         self.players_turn = True
         return vals
 
-    def check_win(self, x, y):
-        if not x or not y:
-            return False
-        if self.board[y][x] == self.board[(y+1)%3][x] and self.board[y][x] == self.board[(y-1)%3][x]:
-            return True
-        if self.board[y][x] == self.board[y][(x+1)%3] and self.board[y][x] == self.board[y][(x-1)%3]:
-            return True
-        
-        if self.board[0][0] == self.board[1][1] and self.board[2][2] == self.board[1][1] and self.board[1][1] != 0:
-            return True
-        if self.board[2][0] == self.board[1][1] and self.board[0][2] == self.board[1][1] and self.board[1][1] != 0:
-            return True
+    def check_win(self):
+        for i in range(3):
+            for j in range(3):
+                if self.board[i][j] == 0:
+                    continue
+                if i == 1 and j == 1:
+                    if self.board[0][0] == self.board[1][1] and self.board[2][2] == self.board[1][1] and self.board[1][1] != 0:
+                        return True
+                    if self.board[2][0] == self.board[1][1] and self.board[0][2] == self.board[1][1] and self.board[1][1] != 0:
+                        return True
+                elif self.board[i][j] == self.board[(i+1)%3][j] and self.board[i][j] == self.board[(i-1)%3][j]:
+                    return True
+                if self.board[i][j] == self.board[i][(j+1)%3] and self.board[i][j] == self.board[i][(j-1)%3]:
+                    return True       
         return False
 
     def check_stalemate(self):
@@ -166,12 +171,15 @@ class NaughtsAndCrosses(object):
 
 
 class AI(object):
-    def move(self, board, level=1):
+    def move(self, board, turn, level=1):
         if level == 1:
             return self.get_rand_ai_move(board)
 
         elif level == 2:
-            return self.get_winning_ai_move(board)
+            return self.get_winning_ai_move(board, turn)
+
+        elif level == 3:
+            return self.play_best_strat(board, turn)
 
     def get_rand_ai_move(self, board):
         valid = False
@@ -182,8 +190,53 @@ class AI(object):
                 valid = True
         return (rand_x, rand_y)
 
-    def get_winning_ai_move(self, board):
-        pass
+    def get_winning_ai_move(self, board, turn):
+        # check for a winning move
+        for i in range(3):
+            for j in range(3):
+                if board[i][j] == 0:
+                    board[i][j] = turn
+                    if self.check_win(board):
+                        board[i][j] = 0
+                        return (i, j)
+                    else:
+                        board[i][j] = 0
+        # if no winning moves then check to block a win
+        for i in range(3):
+            for j in range(3):
+                if board[i][j] == 0:
+                    board[i][j] = turn * -1
+                    if self.check_win(board):
+                        board[i][j] = 0
+                        return (i, j)
+                    else:
+                        board[i][j] = 0
+        # If no winnig or blocking then pick random
+        return self.get_rand_ai_move(board)
+
+
+    def play_best_strat(self, board, turn):
+        # if the board is empty pick a corner
+        if np.sum(board) == 0 or (board[1][1] != 0 and np.abs(np.sum(board)) == 1):
+            return (np.random.choice([0, 2]), np.random.choice([0, 2]))    
+        if board[1][1] != 0:
+            return (1, 1)              
+
+    def check_win(self, board):
+        for i in range(3):
+            for j in range(3):
+                if board[i][j] == 0:
+                    continue
+                if i == 1 and j == 1:
+                    if board[0][0] == board[1][1] and board[2][2] == board[1][1] and board[1][1] != 0:
+                        return True
+                    if board[2][0] == board[1][1] and board[0][2] == board[1][1] and board[1][1] != 0:
+                        return True
+                elif board[i][j] == board[(i+1)%3][j] and board[i][j] == board[(i-1)%3][j]:
+                    return True
+                if board[i][j] == board[i][(j+1)%3] and board[i][j] == board[i][(j-1)%3]:
+                    return True       
+        return False
 
 
 def main():
