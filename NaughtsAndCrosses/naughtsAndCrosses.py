@@ -136,7 +136,7 @@ class NaughtsAndCrosses(object):
             turn = -1
         else:
             turn = 1
-        vals = obj.move(self.board, turn, level=2)
+        vals = obj.move(self.board, turn, level=3)
         if self.naughts:
             self.board[vals[0]][vals[1]] = -1
             self.naughts = False
@@ -217,10 +217,20 @@ class AI(object):
 
     def play_best_strat(self, board, turn):
         # if the board is empty pick a corner
-        if np.sum(board) == 0 or (board[1][1] != 0 and np.abs(np.sum(board)) == 1):
+        if np.sum(np.abs(board)) == 0 or (board[1][1] != 0 and np.sum(np.abs(board)) == 1):
             return (np.random.choice([0, 2]), np.random.choice([0, 2]))    
-        if board[1][1] != 0:
-            return (1, 1)              
+        # otherwise 
+        elif board[1][1] == 0 and np.sum(np.abs(board)) == 1:
+            return (1, 1)   
+        elif np.sum(np.abs(board)) == 2 and board[1][1] == 0:
+            corners = [[0,0], [0,2], [2,0], [2,2]]
+            for i in range(len(corners)):
+                if board[corners[i][0], corners[i][1]] == turn:
+                    print("return corner")
+                    break
+            return(0,0)
+        else:
+            return self.get_winning_ai_move(board, turn)           
 
     def check_win(self, board):
         for i in range(3):
