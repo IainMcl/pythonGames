@@ -9,9 +9,10 @@ class Ball(object):
         self.x = self.width // 2
         self.y = self.height // 2
         self.radius = None
-        self.vx = 1
-        self.vy = 1
+        self.vx = 2
+        self.vy = -2
         self.speed = 1
+        self.min_speed_component = 1
         self.resize(self.width, self.height)
 
     def resize(self, new_screen_width, new_screen_height):
@@ -40,23 +41,45 @@ class Ball(object):
         # If ball goes of the screen return 0 and stop
         if self.y - self.radius >= self.height:
             return 0
+
+        # speed check. x / |x| to mentain direction
+        if np.abs(self.vx) < self.min_speed_component:
+            self.vx = self.min_speed_component * self.vx / np.abs(self.vx)
+        if np.abs(self.vy) < self.min_speed_component:
+            self.vy = self.min_speed_component * self.vy / np.abs(self.vy)
         # Update position
         self.x += self.vx * self.speed
         self.y += self.vy * self.speed
         return (self.x, self.y)
 
     def platformCollide(self, platform):
-        if self.y + self.radius >= platform.y:
+        if self.y + self.radius >= platform.y and self.y + self.radius <= platform.y + platform.platform_height:
             if self.x + self.radius >= platform.x and self.x - self.radius <= platform.x + platform.platform_width:
                 self.vy *= -1
                 pos_on_plat = self.x - platform.x
-                val = 1 - self.gaussian(pos_on_plat, platform.platform_width / 2, 1) * self.vx
+                val = 1 - self.gaussian(pos_on_plat, platform.platform_width / 2, 10)
+                self.vx = val * self.vx
                 if (pos_on_plat < platform.platform_width / 2 and self.vx > 0) or (pos_on_plat > platform.platform_width / 2 and self.vx < 0):
                     self.vx *= -1
                 if pos_on_plat == platform.platform_width // 2:
                     self.vx = 0
-                self.vx *= val
+
+    def brickCollide(self, brick_list):
+        for brick in brick_list:
+            if (self.y + self.radius >= brick.y) and (self.y - self.radius <= brick.y + brick.brick_height):
+                if (self.x + self.radius >= brick.x) and (self.x - self.radius <= brick.x + brick.brick_width):
+                    brick.brickHit()
+                    # if :# x collision
+                    #     self.vx *= -1
+                    # elif : # y collision
+                    #     self.vy *= -1
+
+
 
     @staticmethod
     def gaussian(x, mu, sig):
         return np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.)))
+
+    @staticmethod
+    def speed(vx, vy):
+        return np.sqrt(vx*vx + vy*vy)

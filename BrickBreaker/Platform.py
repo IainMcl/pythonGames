@@ -8,7 +8,7 @@ class Platform(object):
         self.y = None
         self.platform_height = None
         self.platform_width = None
-        self.speed = 3
+        self.speed = 5
         self.resize(self.width, self.height)
 
     def resize(self, new_scree_width, new_screen_height):
