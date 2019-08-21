@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 from Platform import Platform
 from Ball import Ball
+from Brick import Brick
 
 class Game(object):
     def __init__(self):
@@ -17,7 +18,10 @@ class Game(object):
         playing = True
         platform = Platform(self.width, self.height)
         ball = Ball(self.width, self.height)
-        object_list = [platform, ball]
+        ball.restartPosition(platform)
+        print(ball.vx)
+        brick = Brick(self.width // 6, self.height // 2, self.width, self.height)
+        object_list = [platform, ball, brick]
         while playing:
             self.clock.tick(60)
             self.win.blit(pygame.transform.scale(self.background, (self.width, self.height)), (0, 0))
@@ -46,6 +50,7 @@ class Game(object):
             
             platform.move(platform_dir)
             ball.platformCollide(platform)
+            ball.brickCollide([brick])
             ball.move()
             for obj in object_list:
                 obj.draw(self.win)

@@ -28,6 +28,10 @@ class Ball(object):
         self.radius = self.width // 50
         self.speed *= resize_ratio
 
+    def restartPosition(self, platform):
+        self.y = int(platform.y)
+        self.x = int(platform.x + platform.platform_width // 2)
+
     def draw(self, win):
         pygame.draw.circle(win, (255, 20, 20), (int(self.x), int(self.y)), self.radius)
     
@@ -41,7 +45,6 @@ class Ball(object):
         # If ball goes of the screen return 0 and stop
         if self.y - self.radius >= self.height:
             return 0
-
         # speed check. x / |x| to mentain direction
         if np.abs(self.vx) < self.min_speed_component:
             self.vx = self.min_speed_component * self.vx / np.abs(self.vx)
@@ -58,6 +61,8 @@ class Ball(object):
                 self.vy *= -1
                 pos_on_plat = self.x - platform.x
                 val = 1 - self.gaussian(pos_on_plat, platform.platform_width / 2, 10)
+                if val == 0:
+                    val = 0.001
                 self.vx = val * self.vx
                 if (pos_on_plat < platform.platform_width / 2 and self.vx > 0) or (pos_on_plat > platform.platform_width / 2 and self.vx < 0):
                     self.vx *= -1
@@ -69,12 +74,12 @@ class Ball(object):
             if (self.y + self.radius >= brick.y) and (self.y - self.radius <= brick.y + brick.brick_height):
                 if (self.x + self.radius >= brick.x) and (self.x - self.radius <= brick.x + brick.brick_width):
                     brick.brickHit()
-                    # if :# x collision
-                    #     self.vx *= -1
-                    # elif : # y collision
-                    #     self.vy *= -1
-
-
+                    if self.isNear(self.x + self.radius, brick.x) or self.isNear(self.x - self.radius, brick.x + brick.brick_width):
+                        # Bounce x dir
+                        self.vx *= -1
+                    if self.isNear(self.y + self.radius, brick.y) or self.isNear(self.y - self.radius, brick.y + brick.brick_height):
+                        # Bounce y dir
+                        self.vy *= -1
 
     @staticmethod
     def gaussian(x, mu, sig):
@@ -83,3 +88,10 @@ class Ball(object):
     @staticmethod
     def speed(vx, vy):
         return np.sqrt(vx*vx + vy*vy)
+
+    @staticmethod
+    def isNear(x, x_, tol=3):
+        if np.abs(x - x_) <= tol:
+            return True
+        else:
+            return False
